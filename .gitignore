@@ -1,0 +1,21 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Archivos de base de datos
+*.db
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+
+# Archivos de subida
+uploads/
+
+# Configuración sensible
+.env
+
+# Configuración de editores (opcional)
+.vscode/
+.idea/
