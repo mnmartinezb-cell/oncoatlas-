@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Oncoatlas - Paciente</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="api.js" defer></script>
+</head>
+<body>
+<header class="top-bar">
+    <h1>Oncoatlas - Paciente</h1>
+    <nav>
+        <button class="link-button" onclick="location.href='index.html'">Volver al inicio</button>
+    </nav>
+</header>
+
+<main class="layout">
+    <section class="card">
+        <h2>Descargar informe clínico</h2>
+        <p>
+            Tu médico debe indicarte el <strong>ID de paciente</strong> y el <strong>ID de análisis</strong>
+            para poder descargar el informe.
+        </p>
+
+        <form id="patient-download-form" class="form-grid">
+            <label>
+                ID de paciente
+                <input type="number" id="patient-id" required>
+            </label>
+            <label>
+                ID de análisis
+                <input type="number" id="analysis-id" required>
+            </label>
+            <button type="submit">Descargar PDF</button>
+        </form>
+    </section>
+</main>
+
+<footer class="footer">
+    <small>Oncoatlas - Paciente</small>
+</footer>
+
+<script>
+    const API_BASE = getApiBase();
+
+    const form = document.getElementById('patient-download-form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pid = document.getElementById('patient-id').value;
+        const aid = document.getElementById('analysis-id').value;
+        if (!pid || !aid) return;
+
+        try {
+            const url = `${API_BASE}/patients/${pid}/analyses/${aid}/report-pdf`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || response.statusText);
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `oncoatlas_report_patient_${pid}_analysis_${aid}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (err) {
+            alert('Error descargando PDF: ' + err.message);
+        }
+    });
+</script>
+</body>
+</html>

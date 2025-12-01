@@ -1,47 +1,67 @@
-# app/routers/patients.py
+# backend/app/routers/patients.py
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
-from app.db.database import get_db
-from app import models, schemas
+from .. import models, schemas
+from ..database import get_db
 
 router = APIRouter(
-    prefix="/patients",
-    tags=["Patients"],
+    tags=["patients"],
 )
+
+
+@router.get(
+    "/doctors/{doctor_id}/patients",
+    response_model=List[schemas.PatientRead],
+)
+def list_patients_for_doctor(
+    doctor_id: int = Path(..., gt=0),
+    db: Session = Depends(get_db),
+):
+    """Lista de pacientes de un médico concreto."""
+    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Médico no encontrado",
+        )
+
+    patients = (
+        db.query(models.Patient)
+        .filter(models.Patient.doctor_id == doctor_id)
+        .order_by(models.Patient.id)
+        .all()
+    )
+    return patients
 
 
 @router.post(
-    "/",
+    "/doctors/{doctor_id}/patients",
     response_model=schemas.PatientRead,
     status_code=status.HTTP_201_CREATED,
 )
-def create_patient(
+def create_patient_for_doctor(
     patient_in: schemas.PatientCreate,
+    doctor_id: int = Path(..., gt=0),
     db: Session = Depends(get_db),
 ):
-    """
-    Crea un paciente nuevo.
-    """
-    existing = (
-        db.query(models.Patient)
-        .filter(models.Patient.document_id == patient_in.document_id)
-        .first()
-    )
-    if existing:
+    """Crear un paciente asociado a un médico."""
+    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
+    if not doctor:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe un paciente con ese documento",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Médico no encontrado",
         )
 
     patient = models.Patient(
         full_name=patient_in.full_name,
         document_id=patient_in.document_id,
-        birth_date=patient_in.birth_date,
+        date_of_birth=patient_in.date_of_birth,
         sex=patient_in.sex,
+        doctor_id=doctor_id,
     )
     db.add(patient)
     db.commit()
@@ -49,33 +69,15 @@ def create_patient(
     return patient
 
 
-@router.get("/", response_model=List[schemas.PatientRead])
-def list_patients(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-):
-    """
-    Lista pacientes con paginación simple.
-    """
-    patients = (
-        db.query(models.Patient)
-        .order_by(models.Patient.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return patients
-
-
-@router.get("/{patient_id}", response_model=schemas.PatientRead)
+@router.get(
+    "/patients/{patient_id}",
+    response_model=schemas.PatientRead,
+)
 def get_patient(
-    patient_id: int,
+    patient_id: int = Path(..., gt=0),
     db: Session = Depends(get_db),
 ):
-    """
-    Devuelve un paciente por ID.
-    """
+    """Detalle de un paciente concreto."""
     patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(
@@ -83,30 +85,3 @@ def get_patient(
             detail="Paciente no encontrado",
         )
     return patient
-
-
-@router.get(
-    "/{patient_id}/analyses",
-    response_model=List[schemas.AnalysisRead],
-)
-def list_analyses_for_patient(
-    patient_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    Lista los análisis de un paciente.
-    """
-    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
-    if not patient:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Paciente no encontrado",
-        )
-
-    analyses = (
-        db.query(models.Analysis)
-        .filter(models.Analysis.patient_id == patient_id)
-        .order_by(models.Analysis.created_at.desc())
-        .all()
-    )
-    return analyses

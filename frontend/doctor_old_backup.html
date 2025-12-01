@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Oncoatlas - Médico</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="api.js" defer></script>
+</head>
+<body>
+<header class="top-bar">
+    <h1>Oncoatlas - Panel Médico</h1>
+    <nav>
+        <button class="link-button" onclick="location.href='index.html'">Cerrar sesión</button>
+    </nav>
+</header>
+
+<main class="layout">
+    <!-- Crear paciente -->
+    <section class="card">
+        <h2>Registrar nuevo paciente</h2>
+        <form id="create-patient-form" class="form-grid">
+            <label>
+                Nombre completo
+                <input type="text" name="full_name" required>
+            </label>
+            <label>
+                Documento de identidad
+                <input type="text" name="document_id" required>
+            </label>
+            <label>
+                Fecha de nacimiento
+                <input type="date" name="date_of_birth" required>
+            </label>
+            <label>
+                Sexo
+                <select name="sex" required>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                    <option value="O">Otro</option>
+                </select>
+            </label>
+            <label>
+                ID del médico responsable
+                <input type="number" name="doctor_id" required>
+            </label>
+            <button type="submit">Crear paciente</button>
+        </form>
+    </section>
+
+    <!-- Seleccionar paciente y ver información -->
+    <section class="card">
+        <h2>Pacientes</h2>
+        <button onclick="loadPatientsForDoctor()">Actualizar lista</button>
+        <ul id="doctor-patient-list" class="list"></ul>
+
+        <div class="info-box">
+            <p><strong>Paciente seleccionado:</strong> <span id="selected-patient-label">ninguno</span></p>
+        </div>
+    </section>
+
+    <!-- Cargar análisis -->
+    <section class="card">
+        <h2>Crear análisis para el paciente</h2>
+        <form id="analysis-form" enctype="multipart/form-data" class="form-grid">
+            <label>
+                ID de paciente
+                <input type="number" name="patient_id" id="analysis-patient-id" required>
+            </label>
+            <label>
+                Archivo FASTA BRCA1 del paciente
+                <input type="file" name="brca1_file" required>
+            </label>
+            <label>
+                Archivo FASTA BRCA2 del paciente
+                <input type="file" name="brca2_file" required>
+            </label>
+            <button type="submit">Ejecutar análisis</button>
+        </form>
+        <pre id="analysis-result" class="pre-box"></pre>
+    </section>
+
+    <!-- Listar análisis y descargar PDF -->
+    <section class="card">
+        <h2>Análisis previos del paciente</h2>
+        <form id="list-analyses-form" class="form-inline">
+            <label>
+                ID de paciente
+                <input type="number" id="list-analyses-patient-id" required>
+            </label>
+            <button type="submit">Listar análisis</button>
+        </form>
+
+        <ul id="analyses-list" class="list"></ul>
+    </section>
+</main>
+
+<footer class="footer">
+    <small>Oncoatlas - Médico</small>
+</footer>
+
+<script>
+    const API_BASE = getApiBase();
+
+    const patientForm = document.getElementById('create-patient-form');
+    const analysisForm = document.getElementById('analysis-form');
+    const listAnalysesForm = document.getElementById('list-analyses-form');
+
+    patientForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(patientForm);
+        const payload = {
+            full_name: fd.get('full_name'),
+            document_id: fd.get('document_id'),
+            date_of_birth: fd.get('date_of_birth'),
+            sex: fd.get('sex'),
+            doctor_id: Number(fd.get('doctor_id'))
+        };
+        try {
+            const patient = await apiPost(`${API_BASE}/patients`, payload);
+            alert(`Paciente creado con ID: ${patient.id}`);
+            patientForm.reset();
+            loadPatientsForDoctor();
+        } catch (err) {
+            alert('Error creando paciente: ' + err.message);
+        }
+    });
+
+    async function loadPatientsForDoctor() {
+        try {
+            const patients = await apiGet(`${API_BASE}/patients`);
+            const ul = document.getElementById('doctor-patient-list');
+            ul.innerHTML = '';
+            patients.forEach(p => {
+                const li = document.createElement('li');
+                li.textContent = `ID ${p.id} - ${p.full_name} (Doc: ${p.document_id})`;
+                li.classList.add('clickable');
+                li.onclick = () => {
+                    document.getElementById('selected-patient-label').textContent =
+                        `ID ${p.id} - ${p.full_name}`;
+                    document.getElementById('analysis-patient-id').value = p.id;
+                    document.getElementById('list-analyses-patient-id').value = p.id;
+                };
+                ul.appendChild(li);
+            });
+        } catch (err) {
+            alert('Error cargando pacientes: ' + err.message);
+        }
+    }
+
+    analysisForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(analysisForm);
+        const patientId = fd.get('patient_id');
+
+        if (!patientId) {
+            alert('Debes indicar un ID de paciente.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/patients/${patientId}/analyses`, {
+                method: 'POST',
+                body: fd
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || response.statusText);
+            }
+
+            const data = await response.json();
+            document.getElementById('analysis-result').textContent =
+                JSON.stringify(data, null, 2);
+            alert(`Análisis creado con ID: ${data.id}`);
+        } catch (err) {
+            alert('Error ejecutando análisis: ' + err.message);
+        }
+    });
+
+    listAnalysesForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const patientId = document.getElementById('list-analyses-patient-id').value;
+        if (!patientId) return;
+        await loadAnalysesForPatient(patientId);
+    });
+
+    async function loadAnalysesForPatient(patientId) {
+        try {
+            const analyses = await apiGet(`${API_BASE}/patients/${patientId}/analyses`);
+            const ul = document.getElementById('analyses-list');
+            ul.innerHTML = '';
+            analyses.forEach(a => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>Análisis ID ${a.id} - Estado: ${a.status}</span>
+                    <button data-aid="${a.id}" data-pid="${patientId}">Descargar PDF</button>
+                `;
+                const btn = li.querySelector('button');
+                btn.onclick = () => downloadPdfReport(patientId, a.id);
+                ul.appendChild(li);
+            });
+        } catch (err) {
+            alert('Error listando análisis: ' + err.message);
+        }
+    }
+
+    async function downloadPdfReport(patientId, analysisId) {
+        try {
+            const url = `${API_BASE}/patients/${patientId}/analyses/${analysisId}/report-pdf`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || response.statusText);
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `oncoatlas_report_patient_${patientId}_analysis_${analysisId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (err) {
+            alert('Error descargando PDF: ' + err.message);
+        }
+    }
+
+    // carga inicial
+    loadPatientsForDoctor();
+</script>
+</body>
+</html>

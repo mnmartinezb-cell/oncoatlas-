@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Oncoatlas - Administrador</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="api.js" defer></script>
+</head>
+<body>
+<header class="top-bar">
+    <h1>Oncoatlas - Panel Administrador</h1>
+    <nav>
+        <button class="link-button" onclick="location.href='index.html'">Cerrar sesión</button>
+    </nav>
+</header>
+
+<main class="layout">
+    <!-- Gestión de médicos -->
+    <section class="card">
+        <h2>Gestión de médicos</h2>
+
+        <form id="create-doctor-form" class="form-grid">
+            <label>
+                Nombre completo
+                <input type="text" name="full_name" required>
+            </label>
+            <label>
+                Correo
+                <input type="email" name="email" required>
+            </label>
+            <button type="submit">Crear médico</button>
+        </form>
+
+        <hr>
+
+        <button onclick="loadDoctors()">Actualizar lista de médicos</button>
+        <ul id="doctor-list" class="list"></ul>
+    </section>
+
+    <!-- Vista de pacientes (simple) -->
+    <section class="card">
+        <h2>Pacientes registrados</h2>
+        <button onclick="loadPatients()">Actualizar lista de pacientes</button>
+        <ul id="patient-list" class="list"></ul>
+    </section>
+</main>
+
+<footer class="footer">
+    <small>Oncoatlas - Administrador</small>
+</footer>
+
+<script>
+    const API_BASE = getApiBase();
+
+    const doctorForm = document.getElementById('create-doctor-form');
+    doctorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(doctorForm);
+        const payload = {
+            full_name: formData.get('full_name'),
+            email: formData.get('email')
+        };
+        try {
+            const doctor = await apiPost(`${API_BASE}/doctors`, payload);
+            alert(`Médico creado con ID: ${doctor.id}`);
+            doctorForm.reset();
+            loadDoctors();
+        } catch (err) {
+            alert('Error creando médico: ' + err.message);
+        }
+    });
+
+    async function loadDoctors() {
+        try {
+            const doctors = await apiGet(`${API_BASE}/doctors`);
+            const ul = document.getElementById('doctor-list');
+            ul.innerHTML = '';
+            doctors.forEach(d => {
+                const li = document.createElement('li');
+                li.textContent = `ID ${d.id} - ${d.full_name} (${d.email})`;
+                ul.appendChild(li);
+            });
+        } catch (err) {
+            alert('Error cargando médicos: ' + err.message);
+        }
+    }
+
+    async function loadPatients() {
+        try {
+            const patients = await apiGet(`${API_BASE}/patients`);
+            const ul = document.getElementById('patient-list');
+            ul.innerHTML = '';
+            patients.forEach(p => {
+                const li = document.createElement('li');
+                li.textContent = `ID ${p.id} - ${p.full_name} (Doc: ${p.document_id}) Médico ID: ${p.doctor_id}`;
+                ul.appendChild(li);
+            });
+        } catch (err) {
+            alert('Error cargando pacientes: ' + err.message);
+        }
+    }
+
+    // carga inicial
+    loadDoctors();
+    loadPatients();
+</script>
+</body>
+</html>
