@@ -2,226 +2,285 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Oncoatlas - Administrador</title>
+  <title>Oncoatlas - Panel Administrador</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
     }
-    h1, h2 {
-      text-align: left;
+
+    header {
+      background-color: #111827;
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .top-nav {
-      margin-bottom: 20px;
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
     }
-    .top-nav a {
-      margin-right: 10px;
-      text-decoration: none;
-      color: #1976d2;
-      font-weight: bold;
-    }
-    .card {
-      background: #fff;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 6px;
-      margin-top: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 15px;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      background: #1976d2;
-      color: #fff;
-      font-weight: bold;
+
+    .btn-back {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #4b5563;
+      background-color: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
       cursor: pointer;
     }
-    button:hover {
-      background: #115293;
+
+    .btn-back:hover {
+      background-color: #374151;
     }
+
+    main {
+      padding: 16px 24px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .panel {
+      background-color: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      flex: 1;
+      min-width: 280px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .status.error {
+      color: #b91c1c;
+    }
+
+    .status.ok {
+      color: #15803d;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
-      font-size: 14px;
+      margin-top: 8px;
     }
+
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      font-size: 14px;
       text-align: left;
     }
+
     th {
-      background: #eeeeee;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: #fff;
-    }
-    .badge-active {
-      background: #2e7d32;
-    }
-    .badge-inactive {
-      background: #c62828;
-    }
-    .actions button {
-      margin-right: 5px;
-      padding: 4px 8px;
-      font-size: 12px;
+      background-color: #f9fafb;
     }
   </style>
 </head>
 <body>
-  <div class="top-nav">
-    <a href="index.html">&larr; Volver al inicio</a>
-  </div>
+  <header>
+    <h1>Oncoatlas - Panel Administrador (Médicos)</h1>
+    <button class="btn-back" onclick="window.location.href='index.html'">← Volver al inicio</button>
+  </header>
 
-  <h1>Panel de administrador</h1>
+  <main>
+    <!-- Crear médico -->
+    <section class="panel">
+      <h2>Crear nuevo médico</h2>
+      <p class="small">
+        Los médicos son usuarios del sistema que podrán registrar pacientes y solicitar análisis germinales.
+      </p>
 
-  <div class="card">
-    <h2>Crear médico</h2>
-    <form id="doctor-form">
-      <label for="full_name">Nombre completo</label>
-      <input type="text" id="full_name" required />
+      <form id="doctor-form">
+        <label for="full_name">Nombre completo</label>
+        <input type="text" id="full_name" required />
 
-      <label for="email">Correo electrónico</label>
-      <input type="email" id="email" required />
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" required />
 
-      <label for="password">Contraseña (MVP)</label>
-      <input type="password" id="password" required />
+        <label for="specialty">Especialidad (opcional)</label>
+        <input type="text" id="specialty" />
 
-      <label>
-        <input type="checkbox" id="is_active" checked />
-        Activo
-      </label>
+        <button type="submit" class="btn">Guardar médico</button>
+      </form>
 
-      <button type="submit">Crear médico</button>
-    </form>
-    <p id="doctor-message"></p>
-  </div>
+      <div id="admin-status" class="status"></div>
+    </section>
 
-  <div class="card">
-    <h2>Médicos registrados</h2>
-    <table id="doctors-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre completo</th>
-          <th>Correo</th>
-          <th>Activo</th>
-          <th>Creado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- filas generadas por JS -->
-      </tbody>
-    </table>
-  </div>
+    <!-- Lista de médicos -->
+    <section class="panel">
+      <h2>Médicos registrados</h2>
+      <p class="small">
+        Esta lista se alimenta directamente del backend (<code>GET /doctors/</code>).
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Especialidad</th>
+          </tr>
+        </thead>
+        <tbody id="doctors-tbody">
+          <!-- Se llena con JavaScript -->
+        </tbody>
+      </table>
+    </section>
+  </main>
 
   <script>
     const API_BASE = "http://127.0.0.1:8000";
 
-    const doctorForm = document.getElementById("doctor-form");
-    const doctorMessage = document.getElementById("doctor-message");
-    const doctorsTableBody = document.querySelector("#doctors-table tbody");
+    const form = document.getElementById("doctor-form");
+    const statusDiv = document.getElementById("admin-status");
+    const doctorsTbody = document.getElementById("doctors-tbody");
 
     async function loadDoctors() {
-      doctorsTableBody.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
       try {
         const res = await fetch(`${API_BASE}/doctors/`);
         if (!res.ok) {
-          doctorsTableBody.innerHTML = "<tr><td colspan='5'>Error al cargar médicos</td></tr>";
-          return;
+          throw new Error("Error al cargar médicos");
         }
         const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-          doctorsTableBody.innerHTML = "<tr><td colspan='5'>No hay médicos registrados.</td></tr>";
-          return;
-        }
-        doctorsTableBody.innerHTML = "";
-        data.forEach((doc) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${doc.id}</td>
-            <td>${doc.full_name}</td>
-            <td>${doc.email}</td>
-            <td>
-              <span class="badge ${doc.is_active ? "badge-active" : "badge-inactive"}">
-                ${doc.is_active ? "Activo" : "Inactivo"}
-              </span>
-            </td>
-            <td>${new Date(doc.created_at).toLocaleString()}</td>
-          `;
-          doctorsTableBody.appendChild(tr);
-        });
+        renderDoctors(data);
       } catch (err) {
         console.error(err);
-        doctorsTableBody.innerHTML = "<tr><td colspan='5'>Error inesperado.</td></tr>";
+        doctorsTbody.innerHTML =
+          `<tr><td colspan="4" class="small" style="color:#b91c1c;">No se pudieron cargar los médicos.</td></tr>`;
       }
     }
 
-    doctorForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      doctorMessage.textContent = "";
-      const full_name = document.getElementById("full_name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const is_active = document.getElementById("is_active").checked;
+    function renderDoctors(doctors) {
+      doctorsTbody.innerHTML = "";
 
-      if (!full_name || !email || !password) {
-        doctorMessage.textContent = "Por favor completa todos los campos obligatorios.";
-        doctorMessage.style.color = "red";
+      if (!doctors || doctors.length === 0) {
+        doctorsTbody.innerHTML =
+          `<tr><td colspan="4" class="small">No hay médicos registrados.</td></tr>`;
         return;
       }
+
+      doctors.forEach((d) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d.id}</td>
+          <td>${d.full_name}</td>
+          <td>${d.email}</td>
+          <td>${d.specialty ?? "-"}</td>
+        `;
+        doctorsTbody.appendChild(tr);
+      });
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusDiv.textContent = "";
+      statusDiv.className = "status";
+
+      const full_name = document.getElementById("full_name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const specialty = document.getElementById("specialty").value.trim();
+
+      if (!full_name || !email) {
+        statusDiv.textContent = "Nombre completo y correo son obligatorios.";
+        statusDiv.className = "status error";
+        return;
+      }
+
+      const payload = {
+        full_name,
+        email,
+        specialty: specialty || null,
+      };
 
       try {
         const res = await fetch(`${API_BASE}/doctors/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full_name, email, password, is_active }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          doctorMessage.textContent = errorData.detail || "Error al crear médico.";
-          doctorMessage.style.color = "red";
-          return;
+          const text = await res.text();
+          throw new Error(`Error ${res.status}: ${text}`);
         }
 
         const data = await res.json();
-        doctorMessage.textContent = `Médico creado con ID ${data.id}`;
-        doctorMessage.style.color = "green";
+        statusDiv.textContent = `Médico creado con ID ${data.id}.`;
+        statusDiv.className = "status ok";
 
-        doctorForm.reset();
-        document.getElementById("is_active").checked = true;
-
-        await loadDoctors();
+        form.reset();
+        loadDoctors();
       } catch (err) {
         console.error(err);
-        doctorMessage.textContent = "Error inesperado al crear médico.";
-        doctorMessage.style.color = "red";
+        statusDiv.textContent =
+          "Error al crear médico. Revisa si el correo ya existe.";
+        statusDiv.className = "status error";
       }
     });
 
-    // Cargar lista al abrir la página
-    loadDoctors();
+    window.addEventListener("DOMContentLoaded", () => {
+      loadDoctors();
+    });
   </script>
 </body>
 </html>
+

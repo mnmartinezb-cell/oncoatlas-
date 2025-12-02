@@ -1,0 +1,21 @@
+# backend/requirements.txt
+
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+
+# ORM y base de datos
+SQLAlchemy==2.0.44
+
+# Pydantic v2 + validación de email
+pydantic==2.9.2
+pydantic-core==2.23.4
+pydantic[email]
+email-validator==2.2.0
+
+# Subida de archivos (para los FASTA)
+python-multipart==0.0.9
+
+# Consultas HTTP (ClinVar u otros servicios externos)
+requests==2.32.3
+
+reportlab

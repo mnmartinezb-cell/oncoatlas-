@@ -1,52 +1,28 @@
-from typing import List, Optional
+from typing import List
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app import models, schemas
+from app.database import get_db          # 👈 viene de app.database
+from app import models, schemas          # 👈 modelos y esquemas correctos
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[schemas.PatientOut])
-def list_patients(
-    doctor_id: Optional[int] = None,
-    db: Session = Depends(get_db),
-):
+def list_patients(db: Session = Depends(get_db)):
     """
-    Lista todos los pacientes.
-    Si se proporciona doctor_id, filtra solo por ese médico.
+    Lista todos los pacientes registrados.
     """
-    query = db.query(models.Patient)
-    if doctor_id is not None:
-        query = query.filter(models.Patient.doctor_id == doctor_id)
-    patients = query.all()
-    return patients
+    return db.query(models.Patient).all()
 
 
-@router.post("/", response_model=schemas.PatientOut, status_code=201)
+@router.post("/", response_model=schemas.PatientOut)
 def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)):
     """
-    Crea un paciente nuevo.
-
-    - Valida que exista el médico (doctor_id).
-    - Valida que no se repita el número de documento.
+    Crea un nuevo paciente.
     """
-    # Verificar que el médico exista
-    doctor = (
-        db.query(models.Doctor)
-        .filter(models.Doctor.id == patient.doctor_id)
-        .first()
-    )
-    if not doctor:
-        raise HTTPException(
-            status_code=404,
-            detail="Médico asociado no encontrado.",
-        )
-
-    # Evitar documento duplicado
     existing = (
         db.query(models.Patient)
         .filter(models.Patient.document_number == patient.document_number)
@@ -71,12 +47,25 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)
     return db_patient
 
 
+@router.get("/{patient_id}", response_model=schemas.PatientOut)
+def get_patient(patient_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene un paciente por ID.
+    """
+    patient = (
+        db.query(models.Patient)
+        .filter(models.Patient.id == patient_id)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    return patient
+
+
 @router.get("/{patient_id}/analyses")
 def list_patient_analyses(patient_id: int, db: Session = Depends(get_db)):
     """
     Lista los análisis germinales asociados a un paciente.
-
-    Devuelve el JSON completo guardado en raw_result si está disponible.
     """
     patient = (
         db.query(models.Patient)
@@ -95,23 +84,21 @@ def list_patient_analyses(patient_id: int, db: Session = Depends(get_db)):
 
     result = []
     for r in rows:
+        payload = {}
         if r.raw_result:
             try:
                 payload = json.loads(r.raw_result)
-                payload["analysis_id"] = r.id
-                result.append(payload)
-                continue
             except json.JSONDecodeError:
-                pass
+                payload = {}
 
-        # Si no hay JSON válido, devolver algo básico
         result.append(
             {
-                "analysis_id": r.id,
+                "id": r.id,
                 "patient_id": r.patient_id,
                 "description": r.description,
-                "summary": r.summary,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
+                "summary": r.summary,
+                "variants": payload.get("variants", []),
             }
         )
 

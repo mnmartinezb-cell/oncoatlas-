@@ -1,15 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine
-from app.routers import patients, analysis, doctors
+from app.database import Base, engine          # 👈 OJO: app.database, NO app.db
+from app.routers import patients, doctors, analysis
 
-# Crear tablas (patients + germline_analyses + doctors)
+# Crea TODAS las tablas definidas en app.models (incluyendo germline_analyses)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Oncoatlas Backend - Admin/Médicos/Pacientes + Análisis germinal")
+app = FastAPI(title="Oncoatlas API")
 
-# CORS abierto para pruebas locales
+# CORS sencillo para pruebas locales
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,11 +21,10 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Oncoatlas backend con roles y análisis germinal funcionando"}
+    return {"message": "Oncoatlas backend running"}
 
 
-# Rutas
-app.include_router(doctors.router, prefix="/doctors", tags=["doctors"])
+# Rutas principales
 app.include_router(patients.router, prefix="/patients", tags=["patients"])
+app.include_router(doctors.router, prefix="/doctors", tags=["doctors"])
 app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
-

@@ -5,6 +5,23 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
+class Doctor(Base):
+    __tablename__ = "doctors"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    specialty = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Un médico puede tener muchos pacientes
+    patients = relationship(
+        "Patient",
+        back_populates="doctor",
+        cascade="all, delete-orphan",
+    )
+
+
 class Patient(Base):
     __tablename__ = "patients"
 
@@ -14,6 +31,10 @@ class Patient(Base):
     age = Column(Integer, nullable=True)
     gender = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relación con médico
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False, index=True)
+    doctor = relationship("Doctor", back_populates="patients")
 
     # Relación con análisis germinales
     analyses = relationship(
@@ -35,3 +56,5 @@ class GermlineAnalysis(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     patient = relationship("Patient", back_populates="analyses")
+
+

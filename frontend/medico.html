@@ -14,7 +14,11 @@
     header {
       background-color: #1f2933;
       color: white;
-      padding: 16px 24px;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     header h1 {
@@ -22,10 +26,25 @@
       font-size: 20px;
     }
 
+    .btn-back {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #4b5563;
+      background-color: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      background-color: #374151;
+    }
+
     main {
       padding: 16px 24px;
       display: flex;
       gap: 24px;
+      flex-wrap: wrap;
     }
 
     .panel {
@@ -34,7 +53,8 @@
       padding: 16px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
       flex: 1;
-      min-width: 0;
+      min-width: 320px;
+      min-height: 0;
     }
 
     h2 {
@@ -42,6 +62,34 @@
       font-size: 18px;
       border-bottom: 1px solid #e5e7eb;
       padding-bottom: 8px;
+    }
+
+    h3 {
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 8px;
+      box-sizing: border-box;
     }
 
     table {
@@ -70,11 +118,6 @@
       background-color: #dbeafe !important;
     }
 
-    .small {
-      font-size: 12px;
-      color: #6b7280;
-    }
-
     .badge {
       display: inline-block;
       padding: 2px 6px;
@@ -97,6 +140,12 @@
       border: none;
       font-size: 14px;
       cursor: pointer;
+    }
+
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-top: 4px;
     }
 
     .btn:disabled {
@@ -145,20 +194,121 @@
     a:hover {
       text-decoration: underline;
     }
+
+    /* Informe detallado */
+    #report-container {
+      margin-top: 8px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background-color: #f9fafb;
+      font-size: 13px;
+    }
+
+    #report-container h3 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+
+    #report-container table {
+      margin-top: 4px;
+    }
+
+    #report-container .report-header {
+      margin-bottom: 8px;
+    }
+
+    #report-container .report-meta {
+      margin-bottom: 8px;
+    }
+
+    #report-container .report-meta div {
+      margin-bottom: 2px;
+    }
+
+    #report-container .report-footer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .no-print {
+      /* elementos que no quiero ver en PDF */
+    }
+
+    @media print {
+      body {
+        background-color: white;
+      }
+
+      header,
+      main > .panel:first-child,
+      #analysis-status,
+      #analyses-container,
+      #doctor-status,
+      #patient-form,
+      #patients-table,
+      #doctor-select {
+        display: none !important;
+      }
+
+      #report-container {
+        border: none;
+        box-shadow: none;
+        background-color: white;
+        padding: 0;
+      }
+
+      #report-print-note {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Oncoatlas - Panel Médico (Local)</h1>
+    <button class="btn-back" onclick="window.location.href='index.html'">← Volver al inicio</button>
   </header>
 
   <main>
-    <!-- Panel de pacientes -->
+    <!-- Panel de médico + pacientes -->
     <section class="panel">
-      <h2>Pacientes</h2>
+      <h2>Médico y pacientes</h2>
+
       <p class="small">
-        Haz clic en un paciente para ver sus análisis y cargar nuevos archivos FASTA.
+        Selecciona tu usuario médico. Solo verás y crearás pacientes asociados a ese médico.
       </p>
+
+      <label for="doctor-select">Médico:</label>
+      <select id="doctor-select"></select>
+      <div id="doctor-status" class="status"></div>
+
+      <h3>Crear paciente</h3>
+      <form id="patient-form">
+        <label for="full_name">Nombre completo</label>
+        <input type="text" id="full_name" required />
+
+        <label for="document_number">Documento de identidad</label>
+        <input type="text" id="document_number" required />
+
+        <label for="age">Edad</label>
+        <input type="number" id="age" min="0" step="1" />
+
+        <label for="gender">Género</label>
+        <select id="gender">
+          <option value="">(No especificar)</option>
+          <option value="F">Femenino</option>
+          <option value="M">Masculino</option>
+          <option value="O">Otro</option>
+        </select>
+
+        <button type="submit" class="btn">Guardar paciente</button>
+      </form>
+      <div id="patient-form-status" class="status"></div>
+
+      <h3>Lista de pacientes</h3>
       <table id="patients-table">
         <thead>
           <tr>
@@ -182,7 +332,7 @@
         Ningún paciente seleccionado.
       </div>
 
-      <h3 style="font-size:16px; margin-top:12px;">Nuevo análisis</h3>
+      <h3 style="margin-top:12px;">Nuevo análisis</h3>
       <div class="input-row">
         <label>Archivo FASTA BRCA1:</label>
         <input type="file" id="brca1-input" accept=".fasta,.fa,.txt" />
@@ -194,9 +344,17 @@
       <button id="run-analysis-btn" class="btn" disabled>Subir y analizar</button>
       <div id="analysis-status" class="status"></div>
 
-      <h3 style="font-size:16px; margin-top:16px;">Historial de análisis del paciente</h3>
+      <h3 style="margin-top:16px;">Historial de análisis del paciente</h3>
       <div id="analyses-container" class="small">
         Selecciona un paciente para ver sus análisis.
+      </div>
+
+      <h3 style="margin-top:16px;">Informe detallado</h3>
+      <div id="report-container" class="small">
+        Selecciona “Ver informe” en uno de los análisis para generar un informe imprimible.
+      </div>
+      <div id="report-print-note" class="small" style="margin-top:4px;">
+        Para guardar como PDF: usa la función de impresión del navegador (Ctrl + P → “Guardar como PDF”).
       </div>
     </section>
   </main>
@@ -204,8 +362,16 @@
   <script>
     const API_BASE = "http://127.0.0.1:8000";
 
+    let doctors = [];
+    let selectedDoctorId = null;
+
     let patients = [];
     let selectedPatientId = null;
+
+    let currentAnalyses = [];
+
+    const doctorSelect = document.getElementById("doctor-select");
+    const doctorStatus = document.getElementById("doctor-status");
 
     const patientsTbody = document.getElementById("patients-tbody");
     const selectedPatientInfo = document.getElementById("selected-patient-info");
@@ -215,14 +381,90 @@
     const brca1Input = document.getElementById("brca1-input");
     const brca2Input = document.getElementById("brca2-input");
 
-    // Cargar pacientes al iniciar
+    const patientForm = document.getElementById("patient-form");
+    const patientFormStatus = document.getElementById("patient-form-status");
+
+    const reportContainer = document.getElementById("report-container");
+
     window.addEventListener("DOMContentLoaded", () => {
+      loadDoctors();
+    });
+
+    async function loadDoctors() {
+      doctorStatus.textContent = "Cargando médicos...";
+      doctorStatus.className = "status";
+
+      try {
+        const res = await fetch(`${API_BASE}/doctors/`);
+        if (!res.ok) {
+          throw new Error("Error al cargar médicos");
+        }
+        doctors = await res.json();
+
+        if (!doctors || doctors.length === 0) {
+          doctorSelect.innerHTML = "";
+          doctorStatus.textContent =
+            "No hay médicos registrados. Crea médicos desde el panel de administrador.";
+          doctorStatus.className = "status error";
+          selectedDoctorId = null;
+          patients = [];
+          renderPatients();
+          return;
+        }
+
+        doctorSelect.innerHTML = "";
+        doctors.forEach((d) => {
+          const option = document.createElement("option");
+          option.value = d.id;
+          option.textContent = `[${d.id}] ${d.full_name} (${d.email})`;
+          doctorSelect.appendChild(option);
+        });
+
+        selectedDoctorId = doctors[0].id;
+        doctorSelect.value = String(selectedDoctorId);
+
+        doctorStatus.textContent = `Médico seleccionado: [${selectedDoctorId}]`;
+        doctorStatus.className = "status ok";
+
+        loadPatients();
+      } catch (err) {
+        console.error(err);
+        doctorStatus.textContent = "Error al cargar médicos.";
+        doctorStatus.className = "status error";
+      }
+    }
+
+    doctorSelect.addEventListener("change", () => {
+      if (!doctorSelect.value) {
+        selectedDoctorId = null;
+        patients = [];
+        renderPatients();
+        doctorStatus.textContent = "Selecciona un médico.";
+        doctorStatus.className = "status";
+        return;
+      }
+      selectedDoctorId = parseInt(doctorSelect.value, 10);
+      doctorStatus.textContent = `Médico seleccionado: [${selectedDoctorId}]`;
+      doctorStatus.className = "status ok";
+      selectedPatientId = null;
+      selectedPatientInfo.textContent = "Ningún paciente seleccionado.";
+      analysesContainer.textContent = "Selecciona un paciente para ver sus análisis.";
+      reportContainer.textContent =
+        "Selecciona “Ver informe” en uno de los análisis para generar un informe imprimible.";
       loadPatients();
     });
 
     async function loadPatients() {
+      if (!selectedDoctorId) {
+        patients = [];
+        renderPatients();
+        return;
+      }
+
       try {
-        const res = await fetch(`${API_BASE}/patients/`);
+        const res = await fetch(
+          `${API_BASE}/patients/?doctor_id=${selectedDoctorId}`
+        );
         if (!res.ok) {
           throw new Error("Error al cargar pacientes");
         }
@@ -230,15 +472,17 @@
         renderPatients();
       } catch (err) {
         console.error(err);
-        patientsTbody.innerHTML = `<tr><td colspan="5" class="small" style="color:#b91c1c;">No se pudieron cargar los pacientes.</td></tr>`;
+        patientsTbody.innerHTML =
+          `<tr><td colspan="5" class="small" style="color:#b91c1c;">No se pudieron cargar los pacientes.</td></tr>`;
       }
     }
 
     function renderPatients() {
       patientsTbody.innerHTML = "";
 
-      if (patients.length === 0) {
-        patientsTbody.innerHTML = `<tr><td colspan="5" class="small">No hay pacientes registrados.</td></tr>`;
+      if (!patients || patients.length === 0) {
+        patientsTbody.innerHTML =
+          `<tr><td colspan="5" class="small">No hay pacientes registrados para este médico.</td></tr>`;
         return;
       }
 
@@ -269,7 +513,6 @@
       selectedPatientId = id;
       const patient = patients.find((p) => p.id === id);
 
-      // Actualizar info
       if (patient) {
         selectedPatientInfo.textContent =
           `Paciente seleccionado: [${patient.id}] ${patient.full_name} (doc: ${patient.document_number})`;
@@ -277,10 +520,8 @@
         selectedPatientInfo.textContent = "Paciente seleccionado: " + id;
       }
 
-      // Habilitar botón si hay paciente y archivos
       updateRunButtonState();
 
-      // Marcar fila seleccionada
       Array.from(patientsTbody.children).forEach((tr) => tr.classList.remove("selected"));
       const row = Array.from(patientsTbody.children).find(
         (tr) => parseInt(tr.children[0].textContent, 10) === id
@@ -289,8 +530,9 @@
         row.classList.add("selected");
       }
 
-      // Cargar análisis del paciente
       loadAnalysesForPatient(id);
+      reportContainer.textContent =
+        "Selecciona “Ver informe” en uno de los análisis para generar un informe imprimible.";
     }
 
     function updateRunButtonState() {
@@ -312,22 +554,24 @@
           throw new Error("Error al cargar análisis");
         }
         const analyses = await res.json();
-        renderAnalyses(analyses);
+        currentAnalyses = analyses;
+        renderAnalyses();
       } catch (err) {
         console.error(err);
         analysesContainer.innerHTML =
           `<span class="status error">No se pudieron cargar los análisis.</span>`;
+        currentAnalyses = [];
       }
     }
 
-    function renderAnalyses(analyses) {
-      if (!analyses || analyses.length === 0) {
+    function renderAnalyses() {
+      if (!currentAnalyses || currentAnalyses.length === 0) {
         analysesContainer.innerHTML =
           `<span class="small">Este paciente no tiene análisis registrados.</span>`;
         return;
       }
 
-      const parts = analyses.map((a) => {
+      const parts = currentAnalyses.map((a) => {
         const dateText = a.created_at ? a.created_at : "";
         const variants = Array.isArray(a.variants) ? a.variants : [];
         const variantsHtml =
@@ -351,11 +595,113 @@
             <ul class="variants-list">
               ${variantsHtml}
             </ul>
+            <button class="btn btn-small" onclick="showReport(${a.analysis_id})">Ver informe</button>
           </div>
         `;
       });
 
       analysesContainer.innerHTML = parts.join("");
+    }
+
+    function showReport(analysisId) {
+      if (!selectedPatientId) {
+        reportContainer.textContent = "Selecciona primero un paciente.";
+        return;
+      }
+
+      const analysis = currentAnalyses.find((a) => a.analysis_id === analysisId);
+      if (!analysis) {
+        reportContainer.textContent = "No se encontró el análisis seleccionado.";
+        return;
+      }
+
+      const patient = patients.find((p) => p.id === selectedPatientId);
+      const doctor = doctors.find((d) => d.id === selectedDoctorId);
+
+      const dateText = analysis.created_at || "";
+      const variants = Array.isArray(analysis.variants) ? analysis.variants : [];
+
+      const patientName = patient ? patient.full_name : "(desconocido)";
+      const patientDoc = patient ? patient.document_number : "(desconocido)";
+      const patientAge = patient && patient.age != null ? patient.age : "-";
+      const patientGender = patient && patient.gender ? patient.gender : "-";
+
+      const doctorName = doctor ? doctor.full_name : "(no asignado)";
+      const doctorEmail = doctor ? doctor.email : "-";
+      const doctorSpec = doctor && doctor.specialty ? doctor.specialty : "-";
+
+      const variantsRows =
+        variants.length === 0
+          ? `<tr><td colspan="6" class="small">No se detectaron variantes germinales patogénicas conocidas.</td></tr>`
+          : variants
+              .map((v) => {
+                const link = v.clinvar_url
+                  ? `<a href="${v.clinvar_url}" target="_blank" rel="noreferrer">Ver en ClinVar</a>`
+                  : "-";
+                return `
+                  <tr>
+                    <td>${v.gene}</td>
+                    <td>${v.cdna_change}</td>
+                    <td>${v.protein_change}</td>
+                    <td>${v.significance}</td>
+                    <td>${v.associated_cancer || "-"}</td>
+                    <td>${link}</td>
+                  </tr>
+                `;
+              })
+              .join("");
+
+      reportContainer.innerHTML = `
+        <h3>Informe de análisis germinal BRCA1/BRCA2</h3>
+        <div class="report-header">
+          <div class="report-meta">
+            <div><strong>ID de análisis:</strong> ${analysis.analysis_id}</div>
+            <div><strong>Fecha de creación:</strong> ${dateText || "(no disponible)"}</div>
+          </div>
+          <div class="report-meta">
+            <div><strong>Médico responsable:</strong> ${doctorName}</div>
+            <div><strong>Correo del médico:</strong> ${doctorEmail}</div>
+            <div><strong>Especialidad:</strong> ${doctorSpec}</div>
+          </div>
+          <div class="report-meta">
+            <div><strong>Paciente:</strong> ${patientName}</div>
+            <div><strong>Documento:</strong> ${patientDoc}</div>
+            <div><strong>Edad:</strong> ${patientAge}</div>
+            <div><strong>Género:</strong> ${patientGender}</div>
+          </div>
+        </div>
+
+        <div class="report-body">
+          <div style="margin-bottom:8px;">
+            <strong>Resumen del análisis:</strong><br />
+            <span>${analysis.summary || ""}</span>
+          </div>
+
+          <div>
+            <strong>Variantes germinales detectadas:</strong>
+            <table>
+              <thead>
+                <tr>
+                  <th>Gen</th>
+                  <th>Cambio cDNA</th>
+                  <th>Cambio proteína</th>
+                  <th>Significancia</th>
+                  <th>Cáncer asociado</th>
+                  <th>ClinVar</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${variantsRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <div>Este informe corresponde a un prototipo educativo de Oncoatlas para análisis germinal de BRCA1/BRCA2.</div>
+          <div>Para archivar o compartir, use la opción de impresión del navegador (Ctrl + P → Guardar como PDF).</div>
+        </div>
+      `;
     }
 
     runAnalysisBtn.addEventListener("click", async () => {
@@ -397,12 +743,74 @@
         statusDiv.textContent = data.summary || "Análisis completado correctamente.";
         statusDiv.className = "status ok";
 
-        // Recargar el historial de análisis
-        loadAnalysesForPatient(selectedPatientId);
+        // Recargar historial de análisis
+        await loadAnalysesForPatient(selectedPatientId);
       } catch (err) {
         console.error(err);
         statusDiv.textContent = "Error al ejecutar el análisis.";
         statusDiv.className = "status error";
+      }
+    });
+
+    patientForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      patientFormStatus.textContent = "";
+      patientFormStatus.className = "status";
+
+      if (!selectedDoctorId) {
+        patientFormStatus.textContent =
+          "Debes seleccionar un médico antes de crear pacientes.";
+        patientFormStatus.className = "status error";
+        return;
+      }
+
+      const full_name = document.getElementById("full_name").value.trim();
+      const document_number = document.getElementById("document_number").value.trim();
+      const ageValue = document.getElementById("age").value;
+      const gender = document.getElementById("gender").value;
+
+      if (!full_name || !document_number) {
+        patientFormStatus.textContent =
+          "Nombre completo y documento son obligatorios.";
+        patientFormStatus.className = "status error";
+        return;
+      }
+
+      const age = ageValue ? parseInt(ageValue, 10) : null;
+
+      const payload = {
+        full_name,
+        document_number,
+        age,
+        gender: gender || null,
+        doctor_id: selectedDoctorId,
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/patients/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Error ${res.status}: ${text}`);
+        }
+
+        const data = await res.json();
+        patientFormStatus.textContent = `Paciente creado con ID ${data.id}.`;
+        patientFormStatus.className = "status ok";
+
+        patientForm.reset();
+        loadPatients();
+      } catch (err) {
+        console.error(err);
+        patientFormStatus.textContent =
+          "Error al crear paciente. Revisa si el documento ya existe.";
+        patientFormStatus.className = "status error";
       }
     });
   </script>
