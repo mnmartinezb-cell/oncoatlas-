@@ -1,87 +1,96 @@
-# backend/app/routers/patients.py
-
 from typing import List
+import json
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import models, schemas
-from ..database import get_db
+from app.database import get_db
+from app import models, schemas
 
-router = APIRouter(
-    tags=["patients"],
-)
+router = APIRouter()
 
 
-@router.get(
-    "/doctors/{doctor_id}/patients",
-    response_model=List[schemas.PatientRead],
-)
-def list_patients_for_doctor(
-    doctor_id: int = Path(..., gt=0),
-    db: Session = Depends(get_db),
-):
-    """Lista de pacientes de un médico concreto."""
-    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
-    if not doctor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Médico no encontrado",
-        )
-
-    patients = (
-        db.query(models.Patient)
-        .filter(models.Patient.doctor_id == doctor_id)
-        .order_by(models.Patient.id)
-        .all()
-    )
+@router.get("/", response_model=List[schemas.PatientOut])
+def list_patients(db: Session = Depends(get_db)):
+    """
+    Lista todos los pacientes.
+    """
+    patients = db.query(models.Patient).all()
     return patients
 
 
-@router.post(
-    "/doctors/{doctor_id}/patients",
-    response_model=schemas.PatientRead,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_patient_for_doctor(
-    patient_in: schemas.PatientCreate,
-    doctor_id: int = Path(..., gt=0),
-    db: Session = Depends(get_db),
-):
-    """Crear un paciente asociado a un médico."""
-    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
-    if not doctor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Médico no encontrado",
-        )
-
-    patient = models.Patient(
-        full_name=patient_in.full_name,
-        document_id=patient_in.document_id,
-        date_of_birth=patient_in.date_of_birth,
-        sex=patient_in.sex,
-        doctor_id=doctor_id,
+@router.post("/", response_model=schemas.PatientOut, status_code=201)
+def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)):
+    """
+    Crea un paciente nuevo.
+    Valida que no se repita el número de documento.
+    """
+    existing = (
+        db.query(models.Patient)
+        .filter(models.Patient.document_number == patient.document_number)
+        .first()
     )
-    db.add(patient)
-    db.commit()
-    db.refresh(patient)
-    return patient
-
-
-@router.get(
-    "/patients/{patient_id}",
-    response_model=schemas.PatientRead,
-)
-def get_patient(
-    patient_id: int = Path(..., gt=0),
-    db: Session = Depends(get_db),
-):
-    """Detalle de un paciente concreto."""
-    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
-    if not patient:
+    if existing:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Paciente no encontrado",
+            status_code=400,
+            detail="Ya existe un paciente con ese número de documento.",
         )
-    return patient
+
+    db_patient = models.Patient(
+        full_name=patient.full_name,
+        document_number=patient.document_number,
+        age=patient.age,
+        gender=patient.gender,
+    )
+    db.add(db_patient)
+    db.commit()
+    db.refresh(db_patient)
+    return db_patient
+
+
+@router.get("/{patient_id}/analyses")
+def list_patient_analyses(patient_id: int, db: Session = Depends(get_db)):
+    """
+    Lista los análisis germinales asociados a un paciente.
+
+    Devuelve el JSON completo guardado en raw_result si está disponible.
+    """
+    patient = (
+        db.query(models.Patient)
+        .filter(models.Patient.id == patient_id)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    rows = (
+        db.query(models.GermlineAnalysis)
+        .filter(models.GermlineAnalysis.patient_id == patient_id)
+        .order_by(models.GermlineAnalysis.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for r in rows:
+        if r.raw_result:
+            try:
+                payload = json.loads(r.raw_result)
+                payload["analysis_id"] = r.id
+                result.append(payload)
+                continue
+            except json.JSONDecodeError:
+                pass
+
+        # Si no hay JSON válido, devolver algo básico
+        result.append(
+            {
+                "analysis_id": r.id,
+                "patient_id": r.patient_id,
+                "description": r.description,
+                "summary": r.summary,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+        )
+
+    return result
+

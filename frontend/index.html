@@ -1,30 +1,527 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Oncoatlas - Inicio</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <title>Oncoatlas – Panel básico</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 16px 24px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    main {
+      padding: 16px 24px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+    }
+    section {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #ddd;
+    }
+    section:last-of-type {
+      border-bottom: none;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #34495e;
+    }
+    form {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 2px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    input[type="file"] {
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+    }
+    button.secondary {
+      background: #7f8c8d;
+      margin-left: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background: #ecf0f1;
+    }
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+    .small {
+      font-size: 12px;
+      color: #555;
+    }
+    .inline-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .inline-input input[type="checkbox"] {
+      width: auto;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: white;
+    }
+    .badge-ok {
+      background: #27ae60;
+    }
+    .badge-bad {
+      background: #c0392b;
+    }
+  </style>
 </head>
 <body>
-<header class="top-bar">
-    <h1>Oncoatlas</h1>
-    <p class="subtitle">Módulo de Análisis Genético BRCA1/BRCA2</p>
-</header>
+  <header>
+    <h1>Oncoatlas – Panel básico (local)</h1>
+  </header>
 
-<main class="center-container">
-    <section class="card">
-        <h2>Selecciona tu rol</h2>
-        <div class="role-buttons">
-            <button onclick="location.href='admin.html'">Administrador</button>
-            <button onclick="location.href='medico.html'">Médico</button>
-            <button onclick="location.href='patient.html'">Paciente</button>
+  <main>
+    <!-- ================== GESTIÓN DE MÉDICOS ================== -->
+    <section id="doctors-section">
+      <h2>Gestión de médicos</h2>
+
+      <form id="doctor-form">
+        <label for="doctor-full-name">Nombre completo</label>
+        <input type="text" id="doctor-full-name" required>
+
+        <label for="doctor-email">Correo electrónico</label>
+        <input type="email" id="doctor-email" required>
+
+        <label for="doctor-password">Contraseña</label>
+        <input type="password" id="doctor-password" required>
+
+        <div class="inline-input">
+          <input type="checkbox" id="doctor-is-active" checked>
+          <label for="doctor-is-active">Activo</label>
         </div>
-    </section>
-</main>
 
-<footer class="footer">
-    <small>Oncoatlas v1.0 - Uso académico</small>
-</footer>
+        <button type="submit">Crear médico</button>
+        <button type="button" class="secondary" id="reload-doctors">Actualizar lista</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Activo</th>
+            <th>Creado</th>
+          </tr>
+        </thead>
+        <tbody id="doctors-table-body">
+          <!-- se llena por JS -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================== GESTIÓN DE PACIENTES ================== -->
+    <section id="patients-section">
+      <h2>Gestión de pacientes</h2>
+
+      <form id="patient-form">
+        <label for="patient-full-name">Nombre completo</label>
+        <input type="text" id="patient-full-name" required>
+
+        <label for="patient-document-id">Documento de identidad</label>
+        <input type="text" id="patient-document-id" required>
+
+        <label for="patient-age">Edad</label>
+        <input type="number" id="patient-age" min="0" required>
+
+        <label for="patient-gender">Género</label>
+        <select id="patient-gender">
+          <option value="F">Femenino</option>
+          <option value="M">Masculino</option>
+          <option value="O">Otro</option>
+        </select>
+
+        <label for="patient-address">Dirección</label>
+        <input type="text" id="patient-address">
+
+        <label for="patient-phone">Teléfono</label>
+        <input type="text" id="patient-phone">
+
+        <label for="patient-doctor-id">ID del médico responsable</label>
+        <input type="number" id="patient-doctor-id" min="1" required>
+
+        <button type="submit">Crear paciente</button>
+        <button type="button" class="secondary" id="reload-patients">Actualizar lista</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Documento</th>
+            <th>Edad</th>
+            <th>Género</th>
+            <th>Teléfono</th>
+            <th>Médico ID</th>
+          </tr>
+        </thead>
+        <tbody id="patients-table-body">
+          <!-- se llena por JS -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================== ANÁLISIS GERMINAL BRCA1/BRCA2 ================== -->
+    <section id="analysis-section">
+      <h2>Ejecutar análisis germinal BRCA1/BRCA2</h2>
+      <p class="small">
+        Este formulario llama al endpoint
+        <code>POST /analysis/run_for_patient</code>. Envía
+        <code>patient_id</code>, <code>doctor_id</code> y los archivos FASTA
+        (<code>brca1_file</code>, <code>brca2_file</code>) por FormData.
+      </p>
+
+      <form id="analysis-form">
+        <label for="analysis-patient-id">ID del paciente</label>
+        <input type="number" id="analysis-patient-id" min="1" required>
+
+        <label for="analysis-doctor-id">ID del médico</label>
+        <input type="number" id="analysis-doctor-id" min="1" required>
+
+        <label for="brca1-file">Archivo FASTA BRCA1</label>
+        <input type="file" id="brca1-file" accept=".fasta,.fa,.txt" required>
+
+        <label for="brca2-file">Archivo FASTA BRCA2</label>
+        <input type="file" id="brca2-file" accept=".fasta,.fa,.txt" required>
+
+        <button type="submit">Ejecutar análisis</button>
+      </form>
+
+      <h3>Respuesta del análisis (JSON / texto crudo)</h3>
+      <pre id="analysis-result">(aún no se ha ejecutado ningún análisis)</pre>
+    </section>
+
+    <!-- ================== ANÁLISIS PREVIOS DE UN PACIENTE ================== -->
+    <section id="previous-analyses-section">
+      <h2>Ver análisis previos de un paciente</h2>
+      <p class="small">
+        Usa el endpoint <code>GET /patients/{patient_id}/analyses</code> y, si existe,
+        <code>GET /patients/{patient_id}/analyses/{analysis_id}/report-pdf</code>
+        para descargar el informe.
+      </p>
+
+      <div class="inline-input">
+        <label for="history-patient-id" style="margin-top:0;">ID del paciente</label>
+        <input type="number" id="history-patient-id" min="1" style="max-width:120px;">
+        <button id="load-history">Cargar análisis del paciente</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID análisis</th>
+            <th>Descripción / tipo</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="history-table-body">
+          <!-- se llena por JS -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // Ajusta esto si cambias el puerto del backend
+    const API_BASE = "http://127.0.0.1:8000";
+
+    async function fetchJSON(url, options = {}) {
+      const res = await fetch(url, options);
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (!res.ok) throw json;
+        return json;
+      } catch (_) {
+        if (!res.ok) {
+          throw new Error(text || ("HTTP " + res.status));
+        }
+        return text;
+      }
+    }
+
+    // ================== MÉDICOS ==================
+    const doctorForm = document.getElementById("doctor-form");
+    const doctorsTableBody = document.getElementById("doctors-table-body");
+    const reloadDoctorsBtn = document.getElementById("reload-doctors");
+
+    async function loadDoctors() {
+      try {
+        const doctors = await fetchJSON(`${API_BASE}/doctors/`);
+        doctorsTableBody.innerHTML = "";
+        (doctors || []).forEach(d => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.id}</td>
+            <td>${d.full_name}</td>
+            <td>${d.email}</td>
+            <td>${d.is_active ? '<span class="badge badge-ok">Sí</span>' :
+                               '<span class="badge badge-bad">No</span>'}</td>
+            <td>${d.created_at || ""}</td>
+          `;
+          doctorsTableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Error cargando médicos:", err);
+        doctorsTableBody.innerHTML =
+          `<tr><td colspan="5">Error cargando médicos</td></tr>`;
+      }
+    }
+
+    if (doctorForm) {
+      doctorForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const full_name = document.getElementById("doctor-full-name").value.trim();
+        const email     = document.getElementById("doctor-email").value.trim();
+        const password  = document.getElementById("doctor-password").value;
+        const is_active = document.getElementById("doctor-is-active").checked;
+
+        if (!full_name || !email || !password) return;
+
+        try {
+          await fetchJSON(`${API_BASE}/doctors/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ full_name, email, password, is_active })
+          });
+          doctorForm.reset();
+          document.getElementById("doctor-is-active").checked = true;
+          await loadDoctors();
+        } catch (err) {
+          alert("Error creando médico: " + err);
+        }
+      });
+    }
+
+    if (reloadDoctorsBtn) {
+      reloadDoctorsBtn.addEventListener("click", loadDoctors);
+    }
+
+    // ================== PACIENTES ==================
+    const patientForm = document.getElementById("patient-form");
+    const patientsTableBody = document.getElementById("patients-table-body");
+    const reloadPatientsBtn = document.getElementById("reload-patients");
+
+    async function loadPatients() {
+      try {
+        const patients = await fetchJSON(`${API_BASE}/patients/`);
+        patientsTableBody.innerHTML = "";
+        (patients || []).forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.full_name}</td>
+            <td>${p.document_id}</td>
+            <td>${p.age}</td>
+            <td>${p.gender}</td>
+            <td>${p.phone || ""}</td>
+            <td>${p.doctor_id}</td>
+          `;
+          patientsTableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Error cargando pacientes:", err);
+        patientsTableBody.innerHTML =
+          `<tr><td colspan="7">Error cargando pacientes</td></tr>`;
+      }
+    }
+
+    if (patientForm) {
+      patientForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const full_name   = document.getElementById("patient-full-name").value.trim();
+        const document_id = document.getElementById("patient-document-id").value.trim();
+        const age         = Number(document.getElementById("patient-age").value);
+        const gender      = document.getElementById("patient-gender").value;
+        const address     = document.getElementById("patient-address").value.trim();
+        const phone       = document.getElementById("patient-phone").value.trim();
+        const doctor_id   = Number(document.getElementById("patient-doctor-id").value);
+
+        if (!full_name || !document_id || !age || !doctor_id) return;
+
+        try {
+          await fetchJSON(`${API_BASE}/patients/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              full_name,
+              document_id,
+              age,
+              gender,
+              address,
+              phone,
+              doctor_id
+            })
+          });
+          patientForm.reset();
+          await loadPatients();
+        } catch (err) {
+          alert("Error creando paciente: " + err);
+        }
+      });
+    }
+
+    if (reloadPatientsBtn) {
+      reloadPatientsBtn.addEventListener("click", loadPatients);
+    }
+
+    // ================== ANÁLISIS BRCA1/BRCA2 ==================
+    const analysisForm   = document.getElementById("analysis-form");
+    const patientIdInput = document.getElementById("analysis-patient-id");
+    const doctorIdInput  = document.getElementById("analysis-doctor-id");
+    const brca1Input     = document.getElementById("brca1-file");
+    const brca2Input     = document.getElementById("brca2-file");
+    const analysisResult = document.getElementById("analysis-result");
+
+    if (analysisForm) {
+      analysisForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const patient_id = patientIdInput.value.trim();
+        const doctor_id  = doctorIdInput.value.trim();
+
+        if (!patient_id || !doctor_id) {
+          analysisResult.textContent = "Faltan patient_id o doctor_id.";
+          return;
+        }
+        if (!brca1Input.files[0] || !brca2Input.files[0]) {
+          analysisResult.textContent =
+            "Debes seleccionar los dos archivos FASTA (BRCA1 y BRCA2).";
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("patient_id", patient_id);
+        formData.append("doctor_id", doctor_id);
+        // OJO: nombres EXACTOS que espera FastAPI
+        formData.append("brca1_file", brca1Input.files[0]);
+        formData.append("brca2_file", brca2Input.files[0]);
+
+        try {
+          const res = await fetch(`${API_BASE}/analysis/run_for_patient`, {
+            method: "POST",
+            body: formData,
+          });
+          const text = await res.text();
+          analysisResult.textContent = text;
+        } catch (err) {
+          console.error(err);
+          analysisResult.textContent = "Error al conectar con el backend.";
+        }
+      });
+    }
+
+    // ================== HISTORIAL DE ANÁLISIS ==================
+    const historyPatientInput = document.getElementById("history-patient-id");
+    const loadHistoryBtn      = document.getElementById("load-history");
+    const historyTableBody    = document.getElementById("history-table-body");
+
+    async function loadHistory() {
+      const pid = historyPatientInput.value.trim();
+      if (!pid) return;
+
+      try {
+        const analyses = await fetchJSON(`${API_BASE}/patients/${pid}/analyses`);
+        historyTableBody.innerHTML = "";
+        (analyses || []).forEach(a => {
+          const tr = document.createElement("tr");
+          const statusBadge = a.status === "completed"
+            ? '<span class="badge badge-ok">Completado</span>'
+            : '<span class="badge badge-bad">' + (a.status || "Pendiente") + '</span>';
+
+          const pdfUrl =
+            `${API_BASE}/patients/${pid}/analyses/${a.id}/report-pdf`;
+
+          tr.innerHTML = `
+            <td>${a.id}</td>
+            <td>${a.description || a.type || "Análisis BRCA"}</td>
+            <td>${a.created_at || ""}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <a href="${pdfUrl}" target="_blank">Descargar PDF</a>
+            </td>
+          `;
+          historyTableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Error cargando historial:", err);
+        historyTableBody.innerHTML =
+          `<tr><td colspan="5">Error cargando historial</td></tr>`;
+      }
+    }
+
+    if (loadHistoryBtn) {
+      loadHistoryBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        loadHistory();
+      });
+    }
+
+    // Carga inicial de médicos y pacientes al abrir la página
+    loadDoctors();
+    loadPatients();
+  </script>
 </body>
 </html>
-
